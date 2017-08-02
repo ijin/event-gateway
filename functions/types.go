@@ -2,11 +2,17 @@ package functions
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"golang.org/x/oauth2/jwt"
+
+	discovery "google.golang.org/api/discovery/v1"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -34,6 +40,10 @@ type ProviderType string
 const (
 	// AWSLambda represents AWS Lambda function.
 	AWSLambda ProviderType = "awslambda"
+
+	// GCloudFunctions represents functions deployed on Google Cloud Functions.
+	GCloudFunctions = "gcloudfunctions"
+
 	// Weighted contains a set of other functions and their load balancing weights.
 	Weighted ProviderType = "weighted"
 	// HTTPEndpoint represents function defined as HTTP endpoint.
@@ -42,13 +52,18 @@ const (
 
 // Provider provides provider specific info about a function
 type Provider struct {
-	Type ProviderType `json:"type" validate:"required,eq=awslambda|eq=http|eq=weighted"`
+	Type   ProviderType `json:"type" validate:"required,eq=awslambda|eq=gcloudfunctions|eq=http|eq=weighted"`
+	Region string       `json:"region,omitempty"`
 
 	// AWS Lambda function
 	ARN                string `json:"arn,omitempty"`
-	Region             string `json:"region,omitempty"`
 	AWSAccessKeyID     string `json:"awsAccessKeyID,omitempty"`
 	AWSSecretAccessKey string `json:"awsSecretAccessKey,omitempty"`
+
+	// Google Cloud Functions
+	Project                 string                  `json:"project,omitempty"`
+	Name                    string                  `json:"name,omitempty"`
+	GCloudServiceAccountKey GCloudServiceAccountKey `json:"gcloudServiceAccountKey,omitempty"`
 
 	// Group weighted function
 	Weighted WeightedFunctions `json:"weighted,omitempty"`
@@ -57,11 +72,21 @@ type Provider struct {
 	URL string `json:"url,omitempty" validate:"omitempty,url"`
 }
 
+// GCloudServiceAccountKey represents Google Cloud Service Key
+type GCloudServiceAccountKey struct {
+	PrivateKeyID string `json:"private_key_id"`
+	PrivateKey   string `json:"private_key"`
+	ClientEmail  string `json:"client_email"`
+	ClientID     string `json:"client_id"`
+}
+
 // Call tries to send a payload to a target function
 func (f *Function) Call(payload []byte) ([]byte, error) {
 	switch f.Provider.Type {
 	case AWSLambda:
 		return f.callAWSLambda(payload)
+	case GCloudFunctions:
+		return f.callGoogleCloundFunction(payload)
 	case HTTPEndpoint:
 		return f.callHTTP(payload)
 	}
@@ -123,6 +148,42 @@ func (f *Function) callAWSLambda(payload []byte) ([]byte, error) {
 	})
 
 	return invokeOutput.Payload, err
+}
+
+func (f *Function) callGoogleCloundFunction(payload []byte) ([]byte, error) {
+	var client *http.Client
+
+	if f.Provider.GCloudServiceAccountKey.PrivateKey != "" {
+		oauth := jwt.Config{
+			Email:      f.Provider.GCloudServiceAccountKey.ClientEmail,
+			PrivateKey: []byte(f.Provider.GCloudServiceAccountKey.PrivateKey),
+			Scopes:     []string{"https://www.googleapis.com/auth/cloud-platform"},
+			TokenURL:   "https://accounts.google.com/o/oauth2/token",
+		}
+		client = oauth.Client(context.Background())
+	}
+
+	discoveryService, err := discovery.New(client)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	res, err := discoveryService.Apis.GetRest("cloudfunctions", "v1beta2").Do()
+	if err != nil {
+		fmt.Println(fmt.Sprintf("------------ %+v", err))
+		return []byte{}, err
+	}
+
+	fmt.Println(fmt.Sprintf("------------ %+v", res))
+
+	// service, err := cloudfunctions.New(client)
+	// if err != nil {
+	// 	return []byte{}, err
+	// }
+
+	// fmt.Println(fmt.Sprintf("------------ %+v", service))
+
+	return []byte{}, nil
 }
 
 func (f *Function) callHTTP(payload []byte) ([]byte, error) {

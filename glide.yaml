@@ -35,3 +35,9 @@ import:
 - package: github.com/golang/mock
   subpackages:
   - gomock
+- package: google.golang.org/api
+  subpackages:
+  - cloudfunctions/v1
+- package: golang.org/x/oauth2
+  subpackages:
+  - jwt

@@ -127,6 +127,12 @@ func (f *Functions) validateFunction(fn *Function) error {
 		}
 	}
 
+	if fn.Provider.Type == GCloudFunctions {
+		if fn.Provider.Project == "" || fn.Provider.Region == "" || fn.Provider.Name == "" {
+			return &ErrorValidation{"Missing required fields for Google Cloud Functions function."}
+		}
+	}
+
 	if fn.Provider.Type == HTTPEndpoint && fn.Provider.URL == "" {
 		return &ErrorValidation{"Missing required fields for HTTP endpoint."}
 	}
