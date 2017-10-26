@@ -12,7 +12,7 @@ import (
 
 // Event is a default event structure. All data that passes through the Event Gateway is formatted as an Event, based on this schema.
 type Event struct {
-	Type       Type        `json:"event"`
+	Type       Type        `json:"eventType"`
 	ID         string      `json:"id"`
 	ReceivedAt uint64      `json:"receivedAt"`
 	Data       interface{} `json:"data"`
