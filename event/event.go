@@ -13,7 +13,7 @@ import (
 // Event is a default event structure. All data that passes through the Event Gateway is formatted as an Event, based on this schema.
 type Event struct {
 	Type       Type        `json:"eventType"`
-	ID         string      `json:"id"`
+	ID         string      `json:"eventId"`
 	ReceivedAt uint64      `json:"receivedAt"`
 	Data       interface{} `json:"data"`
 	DataType   string      `json:"dataType"`
@@ -41,8 +41,8 @@ const TypeHTTP = Type("http")
 
 // MarshalLogObject is a part of zapcore.ObjectMarshaler interface
 func (e Event) MarshalLogObject(enc zapcore.ObjectEncoder) error {
-	enc.AddString("type", string(e.Type))
-	enc.AddString("id", e.ID)
+	enc.AddString("eventType", string(e.Type))
+	enc.AddString("eventId", e.ID)
 	enc.AddUint64("receivedAt", e.ReceivedAt)
 	payload, _ := json.Marshal(e.Data)
 	enc.AddString("data", string(payload))

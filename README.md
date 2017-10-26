@@ -241,7 +241,7 @@ for invoking function. By default Events API runs on `:4000` port.
 All data that passes through the Event Gateway is formatted as an Event, based on our default Event schema:
 
 - `eventType` - `string` - the event type
-- `id` - `string` - the event's instance universally unique ID (provided by the event gateway)
+- `eventId` - `string` - the event's instance universally unique ID (provided by the event gateway)
 - `receivedAt` - `number` - the time (milliseconds) when the Event was received by the Event Gateway (provided by the event gateway)
 - `data` - type depends on `dataType` - the event payload
 - `dataType` - `string` - the mime type of `data` payload
