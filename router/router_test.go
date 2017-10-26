@@ -59,7 +59,7 @@ func TestRouterServeHTTP_InvokeEventFunctionNotFound(t *testing.T) {
 	router := testrouter(target)
 
 	req, _ := http.NewRequest(http.MethodPost, "/", nil)
-	req.Header.Set("event", "invoke")
+	req.Header.Set("event-type", "invoke")
 	req.Header.Set("function-id", "testfunc")
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, req)
@@ -91,7 +91,7 @@ func TestRouterServeHTTP_ErrorOnCustomEventEmittedWithNonPostMethod(t *testing.T
 	router := testrouter(target)
 
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set("event", "user.created")
+	req.Header.Set("event-type", "user.created")
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, req)
 
@@ -130,14 +130,14 @@ func TestRouterServeHTTP_AllowCORSPreflightForCustomEvents(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodOptions, "/", nil)
 	req.Header.Set("Access-Control-Request-Method", "POST")
-	req.Header.Set("Access-Control-Request-Headers", "event")
+	req.Header.Set("Access-Control-Request-Headers", "event-type")
 	req.Header.Set("Origin", "http://example.com")
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, req)
 
 	assert.Equal(t, http.StatusOK, recorder.Code)
 	assert.Equal(t, "true", recorder.Header().Get("Access-Control-Allow-Credentials"))
-	assert.Equal(t, "Event", recorder.Header().Get("Access-Control-Allow-Headers"))
+	assert.Equal(t, "Event-Type", recorder.Header().Get("Access-Control-Allow-Headers"))
 	assert.Equal(t, "POST", recorder.Header().Get("Access-Control-Allow-Methods"))
 	assert.Equal(t, "http://example.com", recorder.Header().Get("Access-Control-Allow-Origin"))
 }

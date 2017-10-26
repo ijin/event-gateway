@@ -37,7 +37,7 @@ func (ps Subscriptions) CreateSubscription(s *Subscription) (*Subscription, erro
 		}
 	}
 
-	if s.Event == event.TypeHTTP {
+	if s.EventType == event.TypeHTTP {
 		err = ps.createEndpoint(s.Method, s.Path)
 		if err != nil {
 			return nil, err
@@ -62,7 +62,7 @@ func (ps Subscriptions) CreateSubscription(s *Subscription) (*Subscription, erro
 		return nil, err
 	}
 
-	ps.Log.Debug("Subscription created.", zap.String("event", string(s.Event)), zap.String("functionId", string(s.FunctionID)))
+	ps.Log.Debug("Subscription created.", zap.String("event", string(s.EventType)), zap.String("functionId", string(s.FunctionID)))
 	return s, nil
 }
 
@@ -78,14 +78,14 @@ func (ps Subscriptions) DeleteSubscription(id SubscriptionID) error {
 		return &ErrSubscriptionNotFound{sub.ID}
 	}
 
-	if sub.Event == event.TypeHTTP {
+	if sub.EventType == event.TypeHTTP {
 		err = ps.deleteEndpoint(sub.Method, sub.Path)
 		if err != nil {
 			return err
 		}
 	}
 
-	ps.Log.Debug("Subscription deleted.", zap.String("event", string(sub.Event)), zap.String("functionId", string(sub.FunctionID)))
+	ps.Log.Debug("Subscription deleted.", zap.String("event", string(sub.EventType)), zap.String("functionId", string(sub.FunctionID)))
 
 	return nil
 }
@@ -181,7 +181,7 @@ func (ps Subscriptions) deleteEndpoint(method, path string) error {
 
 func (ps Subscriptions) validateSubscription(s *Subscription) error {
 	s.Path = istrings.EnsurePrefix(s.Path, "/")
-	if s.Event == event.TypeHTTP {
+	if s.EventType == event.TypeHTTP {
 		s.Method = strings.ToUpper(s.Method)
 
 		if s.CORS != nil {
@@ -207,7 +207,7 @@ func (ps Subscriptions) validateSubscription(s *Subscription) error {
 		return &ErrSubscriptionValidation{err.Error()}
 	}
 
-	if s.Event == event.TypeHTTP && s.Method == "" {
+	if s.EventType == event.TypeHTTP && s.Method == "" {
 		return &ErrSubscriptionValidation{"Missing required fields (method, path) for HTTP event."}
 	}
 

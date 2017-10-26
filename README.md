@@ -72,7 +72,7 @@ If you want to install and develop with the Event Gateway without the Serverless
 Discover and call serverless functions from anything that can reach the Event Gateway. Function Discovery supports the
 following function types:
 
-- FaaS functions (AWS Lambda, Google Cloud Functions, Azure Functions, OpenWhisk Actions)
+- FaaS functions (AWS Lambda with current implementation, other providers in the future)
 - HTTP endpoints/Webhook (e.g. POST http://example.com/function)
 
 Function Discovery stores information about functions allowing the Event Gateway to call them as a reaction to received
@@ -155,7 +155,7 @@ curl --request POST \
   --header 'content-type: application/json' \
   --data '{
     "functionId": "sendEmail",
-    "event": "user.created",
+    "eventType": "user.created",
     "path": "/myteam"
   }'
 ```
@@ -165,8 +165,8 @@ curl --request POST \
 ```javascript
 const eventGateway = fdk.eventGateway({ url: 'http://localhost' })
 eventGateway.subscribe({
-  event: "user.created",
   functionId: "sendEmail",
+  eventType: "user.created",
   path: "/myteam"
 })
 ```
@@ -181,7 +181,7 @@ eventGateway.subscribe({
 curl --request POST \
   --url http://localhost:4000/ \
   --header 'content-type: application/json' \
-  --header 'event: user.created' \
+  --header 'eventType: user.created' \
   --data '{ "name": "Max" }'
 ```
 
@@ -190,7 +190,7 @@ curl --request POST \
 ```javascript
 const eventGateway = fdk.eventGateway({ url: 'http://localhost' })
 eventGateway.emit({
-  event: "user.created",
+  eventType: "user.created",
   data: { name: "Max" }
 })
 ```
@@ -211,7 +211,7 @@ curl --request POST \
   --header 'content-type: application/json' \
   --data '{
     "functionId": "listUsers",
-    "event": "http",
+    "eventType": "http",
     "method": "GET",
     "path": "/users"
   }'
@@ -223,7 +223,7 @@ curl --request POST \
 const eventGateway = fdk.eventGateway({ url: 'http://localhost' })
 eventGateway.subscribe({
   functionId: 'listUsers',
-  event: 'http',
+  eventType: 'http',
   method: 'GET',
   path: '/users'
 })
@@ -240,7 +240,7 @@ for invoking function. By default Events API runs on `:4000` port.
 
 All data that passes through the Event Gateway is formatted as an Event, based on our default Event schema:
 
-- `event` - `string` - the event name
+- `eventType` - `string` - the event type
 - `id` - `string` - the event's instance universally unique ID (provided by the event gateway)
 - `receivedAt` - `number` - the time (milliseconds) when the Event was received by the Event Gateway (provided by the event gateway)
 - `data` - type depends on `dataType` - the event payload
@@ -250,7 +250,7 @@ Example:
 
 ```json
 {
-  "event": "myapp.user.created",
+  "eventType": "myapp.user.created",
   "id": "66dfc31d-6844-42fd-b1a7-a489a49f65f3",
   "receivedAt": 1500897327098,
   "data": {"foo": "bar"},
@@ -269,7 +269,7 @@ the data block is base64 encoded.
 
 #### HTTP Event
 
-`http` event is a built-in type of event occurring for HTTP requests on paths defined in HTTP subscriptions. The
+`http` is a built-in type of event occurring for HTTP requests on paths defined in HTTP subscriptions. The
 `data` field of an `http` event has the following structure:
 
 - `path` - `string` - request path
@@ -294,7 +294,7 @@ Creating a subscription requires `path` property (by default it's "/"). `path` i
 
 **Request Headers**
 
-- `Event` - `string` - required, event name
+- `Event-Type` - `string` - required, event name
 - `Content-Type`  - `MIME type string` - payload type
 
 **Request**
@@ -366,7 +366,7 @@ Currently, the event gateway supports only string responses.
 
 **Request Headers**
 
-- `Event` - `string` - `"invoke"`
+- `Event-Type` - `string` - `"invoke"` type
 - `Function-ID` - `string` - ID of a function to call
 
 **Request**
@@ -501,7 +501,7 @@ JSON object:
 
 **Request**
 
-- `event` - `string` - event name
+- `eventType` - `string` - event type
 - `functionId` - `string` - ID of function to receive events
 - `method` - `string` - optional, in case of `http` event, HTTP method that accepts requests
 - `path` - `string` - optional, in case of `http` event, path that accepts requests, it starts with "/"
@@ -520,7 +520,7 @@ Status code:
 
 JSON object:
 - `subscriptionId` - `string` - subscription ID
-- `event` - `string` - event name
+- `eventType` - `string` - event type
 - `functionId` - ID of function
 - `method` - `string` - optional, in case of `http` event, HTTP method that accepts requests
 - `path` - `string` - optional, in case of `http` event, path that accepts requests, starts with `/`
@@ -556,7 +556,7 @@ Status code:
 JSON object:
 - `subscriptions` - `array` of `object` - subscriptions
   - `subscriptionId` - `string` - subscription ID
-  - `event` - `string` - event name
+  - `eventType` - `string` - event type
   - `functionId` - ID of function
   - `method` - `string` - optional, in case of `http` event, HTTP method that accepts requests
   - `path` - `string` - optional, in case of `http` event, path that accepts requests

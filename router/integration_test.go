@@ -86,7 +86,7 @@ func TestIntegration_AsyncSubscription(t *testing.T) {
 
 	post(testAPIServer.URL+"/v1/subscriptions", subscriptions.Subscription{
 		FunctionID: subscriberFnID,
-		Event:      eventpkg.Type(eventType),
+		EventType:  eventpkg.Type(eventType),
 		Path:       "/",
 	})
 	wait(router.WaitForSubscriber("/", eventpkg.Type(eventType)), "timed out waiting for subscriber to be configured!")
@@ -129,7 +129,7 @@ func TestIntegration_HTTPSubscription(t *testing.T) {
 
 	post(testAPIServer.URL+"/v1/subscriptions", subscriptions.Subscription{
 		FunctionID: functions.FunctionID("httpresponse"),
-		Event:      "http",
+		EventType:  "http",
 		Method:     "GET",
 		Path:       "/httpresponse",
 	})
@@ -158,7 +158,7 @@ func emit(url, eventType string, body []byte) {
 		panic(err)
 	}
 
-	req.Header.Add("event", eventType)
+	req.Header.Add("event-type", eventType)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		panic(err)

@@ -182,15 +182,18 @@ func (router *Router) WaitForSubscriber(path string, eventType eventpkg.Type) <-
 	return updatedChan
 }
 
-// headerFunctionID is a header name for specifying function id for sync invocation.
-const headerFunctionID = "function-id"
+const (
+	// headerFunctionID is a header name for specifying function id for sync invocation.
+	headerFunctionID = "function-id"
+	headerEventType  = "event-type"
+)
 
 var (
 	errUnableToLookUpRegisteredFunction = errors.New("unable to look up registered function")
 )
 
 func (router *Router) eventFromRequest(r *http.Request) (*eventpkg.Event, error) {
-	eventType := eventpkg.Type(r.Header.Get("event"))
+	eventType := eventpkg.Type(r.Header.Get(headerEventType))
 	if eventType == "" {
 		eventType = eventpkg.TypeHTTP
 	}

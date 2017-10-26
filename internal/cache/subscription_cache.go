@@ -40,7 +40,7 @@ func (c *subscriptionCache) Modified(k string, v []byte) {
 	c.Lock()
 	defer c.Unlock()
 
-	if s.Event == event.TypeHTTP {
+	if s.EventType == event.TypeHTTP {
 		root := c.endpoints[s.Method]
 		if root == nil {
 			root = pathtree.NewNode()
@@ -52,13 +52,13 @@ func (c *subscriptionCache) Modified(k string, v []byte) {
 		}
 	} else {
 		c.createPath(s.Path)
-		ids, exists := c.eventToFunctions[s.Path][s.Event]
+		ids, exists := c.eventToFunctions[s.Path][s.EventType]
 		if exists {
 			ids = append(ids, s.FunctionID)
 		} else {
 			ids = []functions.FunctionID{s.FunctionID}
 		}
-		c.eventToFunctions[s.Path][s.Event] = ids
+		c.eventToFunctions[s.Path][s.EventType] = ids
 
 	}
 }
@@ -74,7 +74,7 @@ func (c *subscriptionCache) Deleted(k string, v []byte) {
 		return
 	}
 
-	if oldSub.Event == event.TypeHTTP {
+	if oldSub.EventType == event.TypeHTTP {
 		root := c.endpoints[oldSub.Method]
 		if root == nil {
 			return
@@ -84,7 +84,7 @@ func (c *subscriptionCache) Deleted(k string, v []byte) {
 			c.log.Error("Could not delete path from the tree.", zap.Error(err), zap.String("path", oldSub.Path), zap.String("method", oldSub.Method))
 		}
 	} else {
-		ids, exists := c.eventToFunctions[oldSub.Path][oldSub.Event]
+		ids, exists := c.eventToFunctions[oldSub.Path][oldSub.EventType]
 		if exists {
 			for i, id := range ids {
 				if id == oldSub.FunctionID {
@@ -92,10 +92,10 @@ func (c *subscriptionCache) Deleted(k string, v []byte) {
 					break
 				}
 			}
-			c.eventToFunctions[oldSub.Path][oldSub.Event] = ids
+			c.eventToFunctions[oldSub.Path][oldSub.EventType] = ids
 
 			if len(ids) == 0 {
-				delete(c.eventToFunctions[oldSub.Path], oldSub.Event)
+				delete(c.eventToFunctions[oldSub.Path], oldSub.EventType)
 			}
 		}
 	}

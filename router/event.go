@@ -21,7 +21,7 @@ const (
 
 func isHTTPEvent(r *http.Request) bool {
 	// is request with custom event
-	if r.Header.Get("event") != "" {
+	if r.Header.Get(headerEventType) != "" {
 		return false
 	}
 
@@ -30,7 +30,7 @@ func isHTTPEvent(r *http.Request) bool {
 		corsReqHeaders := r.Header.Get("Access-Control-Request-Headers")
 		headers := strings.Split(corsReqHeaders, ",")
 		for _, header := range headers {
-			if header == "event" {
+			if header == headerEventType {
 				return false
 			}
 		}
